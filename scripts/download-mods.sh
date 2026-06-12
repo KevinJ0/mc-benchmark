@@ -1,17 +1,14 @@
 #!/bin/bash
 set -e
 
-REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-INSTANCE_DIR="$HOME/.local/share/PrismLauncher/instances/BenchmarkTest"
-MODS_DIR="$INSTANCE_DIR/.minecraft/mods"
+MODS_DIR="$(dirname "$0")/../benchmark-mod/run/mods"
 mkdir -p "$MODS_DIR"
-mkdir -p "$INSTANCE_DIR/.minecraft"
 
 BASE_URL="https://edge.forgecdn.net/files"
 
-echo "Downloading mods..."
+echo "Downloading mods to $MODS_DIR ..."
 
-# When Dungeons Arise (Forge 1.20.1) - no deps
+# When Dungeons Arise (Forge 1.20.1)
 wget -q "$BASE_URL/4983/862/DungeonsArise-1.20.x-2.1.58-release.jar" \
      -O "$MODS_DIR/dungeons-arise.jar"
 
@@ -31,21 +28,5 @@ wget -q "$BASE_URL/7619/938/epic_fight_avalon-20.12.6.4.jar" \
 wget -q "$BASE_URL/8224/805/EpicFight%20Nightfall-3.3.5.jar" \
      -O "$MODS_DIR/epicfight-nightfall.jar"
 
-# Benchmark mod (local build)
-cp "$REPO_ROOT/benchmark-mod/build/libs/"*.jar "$MODS_DIR/fps-benchmark-mod.jar"
-
-echo "Mods deployed to $MODS_DIR"
-
-cat > "$INSTANCE_DIR/prismlauncher.cfg" <<CFG
-[General]
-instanceType=OneSix
-iconKey=grass
-notes=
-
-[Minecraft]
-MinecraftVersion=1.20.1
-modLoader=Forge
-modLoaderVersion=47.3.0
-CFG
-
-echo "Instance created at $INSTANCE_DIR"
+echo "Mods downloaded:"
+ls -lh "$MODS_DIR/"

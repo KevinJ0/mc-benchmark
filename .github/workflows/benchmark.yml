@@ -26,7 +26,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/minecraft
-          key: ${{ runner.os }}-minecraft-assets
+          key: ${{ runner.os }}-minecraft
           restore-keys: ${{ runner.os }}-minecraft
 
       - name: Install system deps
@@ -39,7 +39,7 @@ jobs:
             libgl1 \
             libegl1 \
             libgles2 \
-            wget unzip xdotool
+            wget unzip
 
       - name: Set up Java 17
         uses: actions/setup-java@v4
@@ -47,23 +47,27 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Install Prism Launcher
-        run: |
-          wget -q https://github.com/PrismLauncher/PrismLauncher/releases/download/11.0.2/PrismLauncher-Linux-Qt6-Portable-11.0.2.tar.gz
-          tar -xzf PrismLauncher-Linux-Qt6-Portable-11.0.2.tar.gz
-          sudo mv PrismLauncher-Linux-Qt6-Portable-11.0.2 /opt/prismlauncher
-          echo "/opt/prismlauncher/bin" >> $GITHUB_PATH
+      - name: Setup Gradle wrapper
+        run: bash scripts/setup-gradle.sh
 
-      - name: Build benchmark mod
-        run: bash scripts/build-mod.sh
-
-      - name: Create Prism instance and deploy mods
-        run: bash scripts/setup-instance.sh
+      - name: Download mods
+        run: bash scripts/download-mods.sh
 
       - name: Run benchmark
         run: |
-          chmod +x scripts/run-benchmark.sh
-          xvfb-run -a -s "-screen 0 1024x768x24" bash scripts/run-benchmark.sh
+          cd benchmark-mod
+          xvfb-run -a -s "-screen 0 1024x768x24" \
+            ./gradlew runClient --no-daemon -q 2>&1 | tee /tmp/mc-output.log
+
+      - name: Collect results
+        run: |
+          if [ -f benchmark-mod/run/fps_log.csv ]; then
+            cp benchmark-mod/run/fps_log.csv fps_log.csv
+            echo "fps_log.csv collected"
+          else
+            echo "WARNING: fps_log.csv not found"
+            ls -la benchmark-mod/run/ 2>/dev/null
+          fi
 
       - name: Generate report
         run: |

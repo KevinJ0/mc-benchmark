@@ -13,14 +13,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Cache Gradle
+      - name: Cache Gradle 8.5
         uses: actions/cache@v4
         with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('benchmark-mod/**/*.gradle*', 'benchmark-mod/**/gradle-wrapper.properties') }}
-          restore-keys: ${{ runner.os }}-gradle
+          path: /opt/gradle-8.5
+          key: ${{ runner.os }}-gradle85
+
+      - name: Cache Gradle caches
+        uses: actions/cache@v4
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-cache-${{ hashFiles('benchmark-mod/**/*.gradle') }}
+          restore-keys: ${{ runner.os }}-gradle-cache
 
       - name: Cache Minecraft assets
         uses: actions/cache@v4
@@ -33,12 +37,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            xvfb \
-            mesa-utils \
-            libgl1-mesa-dri \
-            libgl1 \
-            libegl1 \
-            libgles2 \
+            xvfb mesa-utils libgl1-mesa-dri libgl1 libegl1 libgles2 \
             wget unzip
 
       - name: Set up Java 17
@@ -47,8 +46,18 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Setup Gradle wrapper
-        run: bash scripts/setup-gradle.sh
+      - name: Install Gradle 8.5
+        run: |
+          if [ ! -d /opt/gradle-8.5 ]; then
+            wget -q https://services.gradle.org/distributions/gradle-8.5-bin.zip -O /tmp/gradle85.zip
+            sudo unzip -q /tmp/gradle85.zip -d /opt
+          fi
+          echo "/opt/gradle-8.5/bin" >> $GITHUB_PATH
+
+      - name: Build benchmark mod
+        run: |
+          cd benchmark-mod
+          gradle build --no-daemon -q
 
       - name: Download mods
         run: bash scripts/download-mods.sh
@@ -56,8 +65,9 @@ jobs:
       - name: Run benchmark
         run: |
           cd benchmark-mod
+          mkdir -p run
           xvfb-run -a -s "-screen 0 1024x768x24" \
-            ./gradlew runClient --no-daemon -q 2>&1 | tee /tmp/mc-output.log
+            gradle runClient --no-daemon -q 2>&1 | tee /tmp/mc-output.log
 
       - name: Collect results
         run: |
@@ -66,7 +76,7 @@ jobs:
             echo "fps_log.csv collected"
           else
             echo "WARNING: fps_log.csv not found"
-            ls -la benchmark-mod/run/ 2>/dev/null
+            ls -la benchmark-mod/run/ 2>/dev/null || true
           fi
 
       - name: Generate report

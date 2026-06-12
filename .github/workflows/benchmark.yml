@@ -49,9 +49,9 @@ jobs:
 
       - name: Install Prism Launcher
         run: |
-          wget -q https://github.com/PrismLauncher/PrismLauncher/releases/download/9.2/PrismLauncher-Linux-9.2.tar.gz
-          tar -xzf PrismLauncher-Linux-9.2.tar.gz
-          sudo mv PrismLauncher /opt/prismlauncher
+          wget -q https://github.com/PrismLauncher/PrismLauncher/releases/download/11.0.2/PrismLauncher-Linux-Qt6-Portable-11.0.2.tar.gz
+          tar -xzf PrismLauncher-Linux-Qt6-Portable-11.0.2.tar.gz
+          sudo mv PrismLauncher-Linux-Qt6-Portable-11.0.2 /opt/prismlauncher
           echo "/opt/prismlauncher/bin" >> $GITHUB_PATH
 
       - name: Build benchmark mod

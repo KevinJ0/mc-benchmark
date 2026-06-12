@@ -12,8 +12,6 @@ cd "$HOME"
 #   35s total, then exits Minecraft
 /opt/prismlauncher/bin/prismlauncher \
     --launch BenchmarkTest \
-    --no-thunder \
-    --no-shell \
     2>&1 | tee /tmp/prism-output.log
 
 echo "Minecraft exited."

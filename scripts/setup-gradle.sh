@@ -12,6 +12,9 @@ echo "Generating Gradle 8.5 wrapper from temp dir..."
 TMP_DIR=$(mktemp -d)
 cd "$TMP_DIR"
 
+# Gradle 9.x requires at least a settings file
+echo 'rootProject.name = "tmp"' > settings.gradle
+
 if command -v gradle &>/dev/null; then
     gradle wrapper --gradle-version 8.5
 else

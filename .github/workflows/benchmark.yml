@@ -1,0 +1,81 @@
+name: Minecraft FPS Benchmark
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('benchmark-mod/**/*.gradle*', 'benchmark-mod/**/gradle-wrapper.properties') }}
+          restore-keys: ${{ runner.os }}-gradle
+
+      - name: Cache Minecraft assets
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/minecraft
+          key: ${{ runner.os }}-minecraft-assets
+          restore-keys: ${{ runner.os }}-minecraft
+
+      - name: Install system deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            openjdk-17-jdk \
+            xvfb \
+            mesa-utils \
+            libgl1-mesa-dri \
+            libgl1-mesa-glx \
+            libegl1-mesa \
+            libgles2 \
+            wget unzip xdotool
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Install Prism Launcher
+        run: |
+          wget -q https://github.com/PrismLauncher/PrismLauncher/releases/download/9.2/PrismLauncher-Linux-9.2.tar.gz
+          tar -xzf PrismLauncher-Linux-9.2.tar.gz
+          sudo mv PrismLauncher /opt/prismlauncher
+          echo "/opt/prismlauncher/bin" >> $GITHUB_PATH
+
+      - name: Build benchmark mod
+        run: bash scripts/build-mod.sh
+
+      - name: Create Prism instance and deploy mods
+        run: bash scripts/setup-instance.sh
+
+      - name: Run benchmark
+        run: |
+          chmod +x scripts/run-benchmark.sh
+          xvfb-run -a -s "-screen 0 1024x768x24" bash scripts/run-benchmark.sh
+
+      - name: Generate report
+        run: |
+          pip install -q -r analyze/requirements.txt
+          python3 analyze/report.py
+
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: |
+            fps_log.csv
+            benchmark_report.png
+            benchmark_stats.json

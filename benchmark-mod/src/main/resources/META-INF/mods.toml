@@ -1,0 +1,16 @@
+modLoader="javafml"
+loaderVersion="[47,)"
+license="MIT"
+side="CLIENT"
+mods {
+    modId = "fpsbenchmark"
+    version = "1.0.0"
+    displayName = "FPS Benchmark Mod"
+    logoFile = ""
+    credits = ""
+    authors = "opencode"
+    description = '''
+        Records FPS every second while rotating the player 360 degrees
+        over 30 seconds for benchmarking purposes.
+    '''
+}

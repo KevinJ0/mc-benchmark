@@ -33,12 +33,11 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            openjdk-17-jdk \
             xvfb \
             mesa-utils \
             libgl1-mesa-dri \
-            libgl1-mesa-glx \
-            libegl1-mesa \
+            libgl1 \
+            libegl1 \
             libgles2 \
             wget unzip xdotool
 
